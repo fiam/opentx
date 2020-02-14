@@ -1,0 +1,33 @@
+name: Firmware CI Check
+on: [push]
+
+env:
+    GCC_ARM_URL: https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
+    GCC_ARM_VERSION_DATE: 20130916
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    strategy:
+        matrix:
+            flavor: [ARM9X, X9LITE, X7, XLITE, X9, COLORLCD]
+
+    steps:
+        - uses: actions/checkout@v2
+          #        - run: sudo apt-get install -y curl libmpfr4 libmpc3 libfox-1.6-dev clang-6.0 python3-pip
+        - run: sudo apt-get update
+        - run: sudo apt-get install -y cmake curl python3-pip libfox-1.6-dev qtbase5-dev qtmultimedia5-dev libqt5svg5-dev qttools5-dev qttools5-dev-tools 
+        - run: |
+            curl -sL ${GCC_ARM_URL} | tar xjf -
+            sudo mv gcc-arm-none-eabi-* /opt/gcc-arm-none-eabi
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-gcc /usr/bin/arm-none-eabi-gcc
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-g++ /usr/bin/arm-none-eabi-g++
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-as /usr/bin/arm-none-eabi-as
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-objcopy /usr/bin/arm-none-eabi-objcopy
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-objdump /usr/bin/arm-none-eabi-objdump
+            sudo ln -s /opt/gcc-arm-none-eabi/bin/arm-none-eabi-size /usr/bin/arm-none-eabi-size
+            sudo ln -sf /usr/bin/python3 /usr/bin/python
+            python3 -m pip install pillow clang
+        - run: ./tools/commit-tests.sh
+          env:
+            FLAVOR: ${{ matrix.flavor }}
