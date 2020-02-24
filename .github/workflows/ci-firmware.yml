@@ -1,9 +1,6 @@
 name: Firmware CI Check
 on: [push]
 
-env:
-    GCC_ARM_URL: https://launchpad.net/gcc-arm-embedded/4.7/4.7-2013-q3-update/+download/gcc-arm-none-eabi-4_7-2013q3-20130916-linux.tar.bz2
-
 jobs:
   build:
     runs-on: ubuntu-18.04
@@ -14,13 +11,13 @@ jobs:
 
     steps:
         - uses: actions/checkout@v2
+        - uses: fiam/arm-none-eabi-gcc@v1
+          with:
+            release: 4.7-2013-q3
         - run: sudo apt-get update
         - run: sudo apt-get install -y cmake curl python3-pip libfox-1.6-dev qtbase5-dev qtmultimedia5-dev libqt5svg5-dev qttools5-dev qttools5-dev-tools 
-        - run: |
-            curl -sL ${GCC_ARM_URL} | tar xjf -
-            sudo mv gcc-arm-none-eabi-* /opt/gcc-arm-none-eabi
-            sudo ln -sf /usr/bin/python3 /usr/bin/python
-            python3 -m pip install pillow clang
-        - run: PATH=/opt/gcc-arm-none-eabi/bin:${PATH} ./tools/commit-tests.sh
+        - run: sudo ln -sf /usr/bin/python3 /usr/bin/python
+        - run: python3 -m pip install pillow clang
+        - run: ./tools/commit-tests.sh
           env:
             FLAVOR: ${{ matrix.flavor }}
